@@ -156,7 +156,7 @@ def test_argilla_trainer_text_classification_with_model_tokenizer(
 
         # Assert that the provided tokenizer is used
         assert (
-            trainer._trainer._transformers_tokenizer.pretrained_init_configuration
+            trainer._trainer._framework_tokenizer.pretrained_init_configuration
             == tokenizer.pretrained_init_configuration
         )
 

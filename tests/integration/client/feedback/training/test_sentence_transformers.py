@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Callable, List, Union
 import pytest
 from argilla.client.feedback.dataset import FeedbackDataset
 from argilla.client.feedback.schemas.records import FeedbackRecord
-from argilla.client.feedback.training.base import ArgillaTrainer
+from argilla.client.feedback.training.frameworks.base import ArgillaTrainer
 from argilla.client.feedback.training.schemas import (
     TrainingTask,
 )
@@ -213,7 +213,7 @@ def test_prepare_for_training_sentence_transformers(
     assert trainer._trainer.trainer_kwargs["epochs"] == 1
     train_with_cleanup(trainer, __OUTPUT_DIR__)
     # Check we have a bi-encoder/cross-encoder
-    assert isinstance(trainer._trainer._trainer, model_type)
+    assert isinstance(trainer._trainer._framework_trainer, model_type)
 
     eval_trainer = ArgillaTrainer(
         dataset=dataset,
@@ -261,7 +261,7 @@ def test_prepare_for_training_sentence_transformers_bad_format(
         match_start = r"^Datasets containing a `sentence`"
 
     with pytest.raises(ValueError, match=match_start):
-        trainer = ArgillaTrainer(
+        ArgillaTrainer(
             dataset=dataset,
             task=task,
             framework="sentence-transformers",

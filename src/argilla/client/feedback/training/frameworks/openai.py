@@ -14,7 +14,7 @@
 
 from typing import TYPE_CHECKING
 
-from argilla.client.feedback.training.base import ArgillaTrainerSkeleton
+from argilla.client.feedback.training.frameworks.base import ArgillaTrainerSkeleton
 from argilla.training.openai import ArgillaOpenAITrainer as ArgillaOpenAITrainerV1
 from argilla.utils.dependency import require_dependencies
 

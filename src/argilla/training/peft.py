@@ -75,17 +75,17 @@ class ArgillaPeftTrainer(ArgillaTransformersTrainer):
             model = self._model_class.from_pretrained(**self.model_kwargs, return_dict=True)
             self._model_sub_class = model.__class__
             model = get_peft_model(model, config)
-        self._transformers_tokenizer = AutoTokenizer.from_pretrained(
+        self._framework_tokenizer = AutoTokenizer.from_pretrained(
             config.base_model_name_or_path, add_prefix_space=True
         )
-        self._transformers_model = model.to(self.device)
+        self._framework_model = model.to(self.device)
 
     def init_pipeline(self):
         pass
 
     def update_config(self, **kwargs):
         """
-        Updates the `setfit_model_kwargs` and `setfit_trainer_kwargs` dictionaries with the keyword
+        Updates the `model_kwargs` and `trainer_kwargs` dictionaries with the keyword
         arguments passed to the `update_config` function.
         """
         super().update_config(**kwargs)
@@ -121,7 +121,7 @@ class ArgillaPeftTrainer(ArgillaTransformersTrainer):
         """
         import torch
 
-        if self._transformers_model is None:
+        if self._framework_model is None:
             self._logger.warning("Using model without fine-tuning.")
             self.init_model(new=False)
 
@@ -131,10 +131,10 @@ class ArgillaPeftTrainer(ArgillaTransformersTrainer):
             str_input = True
 
         if self._record_class == TextClassificationRecord:
-            inputs = self._transformers_tokenizer(text, truncation=True, padding="longest", return_tensors="pt")
+            inputs = self._framework_tokenizer(text, truncation=True, padding="longest", return_tensors="pt")
 
             with torch.no_grad():
-                logits = self._transformers_model(**inputs).logits
+                logits = self._framework_model(**inputs).logits
 
             if self._multi_label:
                 probabilities = torch.sigmoid(logits)
@@ -148,7 +148,7 @@ class ArgillaPeftTrainer(ArgillaTransformersTrainer):
                 predictions.append(prediction)
         else:
             # Tokenize the text
-            inputs_with_offsets = self._transformers_tokenizer(
+            inputs_with_offsets = self._framework_tokenizer(
                 text, truncation=True, padding="longest", return_offsets_mapping=True, return_tensors="pt"
             )
             inputs_with_offsets = {k: v.to(self.device) for k, v in inputs_with_offsets.items()}
@@ -156,7 +156,7 @@ class ArgillaPeftTrainer(ArgillaTransformersTrainer):
 
             # Perform the forward pass through the model
             with torch.no_grad():
-                outputs = self._transformers_model(
+                outputs = self._framework_model(
                     **{k: v for k, v in inputs_with_offsets.items() if k != "offset_mapping"}
                 )
                 probabilities = torch.nn.functional.softmax(outputs.logits, dim=-1).tolist()
@@ -169,7 +169,7 @@ class ArgillaPeftTrainer(ArgillaTransformersTrainer):
                 idx = 0
                 while idx < len(predictions[batch_idx]):
                     pred = predictions[batch_idx][idx]
-                    label = self._transformers_model.config.id2label[pred]
+                    label = self._framework_model.config.id2label[pred]
                     if label != "O":
                         # Remove the B- or I-
                         label = label[2:]
@@ -179,7 +179,7 @@ class ArgillaPeftTrainer(ArgillaTransformersTrainer):
                         all_scores = []
                         while (
                             idx < len(predictions[batch_idx])
-                            and self._transformers_model.config.id2label[predictions[batch_idx][idx]] == f"I-{label}"
+                            and self._framework_model.config.id2label[predictions[batch_idx][idx]] == f"I-{label}"
                         ):
                             all_scores.append(probabilities[batch_idx][idx][pred])
                             _, end = offsets[batch_idx][idx]
@@ -250,5 +250,5 @@ class ArgillaPeftTrainer(ArgillaTransformersTrainer):
         Args:
           output_dir (str): the path to save the model to
         """
-        self._transformers_model.save_pretrained(output_dir)
-        self._transformers_tokenizer.save_pretrained(output_dir)
+        self._framework_model.save_pretrained(output_dir)
+        self._framework_tokenizer.save_pretrained(output_dir)

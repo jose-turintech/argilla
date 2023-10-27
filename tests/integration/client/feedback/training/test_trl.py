@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List
 import pytest
 from argilla.client.feedback.dataset import FeedbackDataset
 from argilla.client.feedback.schemas.records import FeedbackRecord
-from argilla.client.feedback.training.base import ArgillaTrainer
+from argilla.client.feedback.training.frameworks.base import ArgillaTrainer
 from argilla.client.feedback.training.schemas import (
     TrainingTask,
     TrainingTaskForDPOFormat,
@@ -116,8 +116,8 @@ def test_prepare_for_training_sft(
 
         # Verify that the passed model and tokenizer are used
         if tokenizer is not None:
-            assert trainer._trainer._transformers_model.test_value == 12
-            assert trainer._trainer._transformers_tokenizer.test_value == 12
+            assert trainer._trainer._framework_model.test_value == 12
+            assert trainer._trainer._framework_tokenizer.test_value == 12
 
 
 def test_prepare_for_training_rm(
@@ -183,8 +183,8 @@ def test_prepare_for_training_rm(
 
         # Verify that the passed model and tokenizer are used
         if tokenizer is not None:
-            assert trainer._trainer._transformers_model.test_value == 12
-            assert trainer._trainer._transformers_tokenizer.test_value == 12
+            assert trainer._trainer._framework_model.test_value == 12
+            assert trainer._trainer._framework_tokenizer.test_value == 12
 
 
 def test_prepare_for_training_ppo(
@@ -248,8 +248,8 @@ def test_prepare_for_training_ppo(
 
         # Verify that the passed model and tokenizer are used
         if tokenizer is not None:
-            assert trainer._trainer._transformers_model.test_value == 12
-            assert trainer._trainer._transformers_tokenizer.test_value == 12
+            assert trainer._trainer._framework_model.test_value == 12
+            assert trainer._trainer._framework_tokenizer.test_value == 12
 
 
 def test_prepare_for_training_dpo(
@@ -320,8 +320,8 @@ def test_prepare_for_training_dpo(
 
         # Verify that the passed model and tokenizer are used
         if tokenizer is not None:
-            assert trainer._trainer._transformers_model.test_value == 12
-            assert trainer._trainer._transformers_tokenizer.test_value == 12
+            assert trainer._trainer._framework_model.test_value == 12
+            assert trainer._trainer._framework_tokenizer.test_value == 12
 
 
 def test_sft_with_peft(

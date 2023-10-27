@@ -63,6 +63,6 @@ class ArgillaSetFitTrainer(ArgillaSetFitTrainerV1, ArgillaTransformersTrainer):
         return SetFitModelCardData(
             model_id=self._model,
             task=self._task,
-            update_config_kwargs={**self.setfit_model_kwargs, **self.setfit_trainer_kwargs},
+            update_config_kwargs={**self.model_kwargs, **self.trainer_kwargs},
             **card_data_kwargs,
         )

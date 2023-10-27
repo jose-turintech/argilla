@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from argilla.client.feedback.schemas.records import FeedbackRecord
-from argilla.client.feedback.training.schemas import TrainingTaskForTextClassification, TrainingTaskTypes
+from argilla.client.feedback.training.schemas.base import TrainingTaskForTextClassification, TrainingTaskTypes
 from argilla.client.models import Framework, TextClassificationRecord
 from argilla.training import ArgillaTrainer as ArgillaTrainerV1
 
@@ -318,6 +318,8 @@ class ArgillaTrainerSkeleton(ABC):
             self._record_class = TextClassificationRecord  # TODO: dirty hack to inherit from original trainers
         else:
             self._record_class = FeedbackRecord
+        self.model_kwargs = {}
+        self.trainer_kwargs = {}
 
     @abstractmethod
     def init_training_args(self) -> None:
@@ -360,3 +362,15 @@ class ArgillaTrainerSkeleton(ABC):
         """
         Generates a `FrameworkCardData` instance to generate a model card from.
         """
+
+    def get_model_kwargs(self):
+        """
+        Returns the model kwargs.
+        """
+        return self.model_kwargs
+
+    def get_training_kwargs(self):
+        """
+        Returns the training kwargs.
+        """
+        return self.trainer_kwargs

@@ -73,14 +73,14 @@ class _ArgillaSpaCyTrainerBase(ArgillaTrainerSkeleton):
         super().__init__(*args, **kwargs)
         import spacy
 
-        self._nlp = None
+        self._framework_model = None
         self._model = model
 
         if self._model is None:
             self._model = "en_core_web_sm"
             self._logger.warning(f"No model defined. Using the default model {self._model}.")
 
-        self.config = {}
+        self.trainer_kwargs = {}
         if self._record_class == TokenClassificationRecord:
             self._column_mapping = {
                 "text": "text",
@@ -139,7 +139,7 @@ class _ArgillaSpaCyTrainerBase(ArgillaTrainerSkeleton):
     def init_model(self):
         import spacy
 
-        self._nlp = spacy.load(self._model)
+        self._framework_model = spacy.load(self._model)
 
     def __repr__(self) -> None:
         """Return the string representation of the `ArgillaSpaCyTrainer` object containing
@@ -150,7 +150,7 @@ class _ArgillaSpaCyTrainerBase(ArgillaTrainerSkeleton):
             " the `training` arguments defined in the `config.yaml`."
         )
         formatted_string.append("\n`ArgillaSpaCyTrainer`")
-        for key, val in self.config["training"].items():
+        for key, val in self.trainer_kwargs["training"].items():
             if isinstance(val, dict):
                 continue
             formatted_string.append(f"\t{key}: {val}")
@@ -170,7 +170,7 @@ class _ArgillaSpaCyTrainerBase(ArgillaTrainerSkeleton):
         Args:
             **spacy_training_config: The `spaCy` training config.
         """
-        self.config["training"].update(spacy_training_config)
+        self.trainer_kwargs["training"].update(spacy_training_config)
 
     def train(self, output_dir: Optional[str] = None) -> None:
         """Train the pipeline using `spaCy`.
@@ -197,8 +197,8 @@ class _ArgillaSpaCyTrainerBase(ArgillaTrainerSkeleton):
         # cell if using the GPU, otherwise, since `thinc` is using `ContextVars` to
         # store the `Config` object, the `Config` object will be lost between cells and
         # the training will fail.
-        self._nlp = init_nlp(self.config, use_gpu=self.gpu_id)
-        self._nlp, _ = train_nlp(self._nlp, use_gpu=self.gpu_id, stdout=sys.stdout, stderr=sys.stderr)
+        self._framework_model = init_nlp(self.trainer_kwargs, use_gpu=self.gpu_id)
+        self._framework_model, _ = train_nlp(self._framework_model, use_gpu=self.gpu_id, stdout=sys.stdout, stderr=sys.stderr)
 
         if output_dir:
             self.save(output_dir)
@@ -212,7 +212,7 @@ class _ArgillaSpaCyTrainerBase(ArgillaTrainerSkeleton):
         output_dir = Path(output_dir) if isinstance(output_dir, str) else output_dir
         if output_dir and not output_dir.exists():
             output_dir.mkdir(parents=True)
-        self._nlp.to_disk(output_dir)
+        self._framework_model.to_disk(output_dir)
 
     def predict(
         self, text: Union[List[str], str], as_argilla_records: bool = True, **kwargs
@@ -229,7 +229,7 @@ class _ArgillaSpaCyTrainerBase(ArgillaTrainerSkeleton):
             Either a `dict`, `BaseModel` (if `as_argilla_records` is True) or a `List[dict]`,
             `List[BaseModel]` (if `as_argilla_records` is True) with the predictions.
         """
-        if self._nlp is None:
+        if self._framework_model is None:
             self._logger.warning("Using model without fine-tuning.")
             self.init_model()
 
@@ -239,7 +239,7 @@ class _ArgillaSpaCyTrainerBase(ArgillaTrainerSkeleton):
             str_input = True
 
         formatted_prediction = []
-        docs = self._nlp.pipe(text, **kwargs)
+        docs = self._framework_model.pipe(text, **kwargs)
         if as_argilla_records:
             for doc in docs:
                 if "ner" in self._pipeline:

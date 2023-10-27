@@ -15,8 +15,8 @@
 import logging
 from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
-from argilla.client.feedback.training.base import ArgillaTrainerSkeleton
-from argilla.client.feedback.training.schemas import TrainingTaskForSentenceSimilarity
+from argilla.client.feedback.training.frameworks.base import ArgillaTrainerSkeleton
+from argilla.client.feedback.training.schemas.base import TrainingTaskForSentenceSimilarity
 from argilla.training.utils import filter_allowed_args, get_default_args
 from argilla.utils.dependency import require_dependencies
 
@@ -184,7 +184,7 @@ class ArgillaSentenceTransformersTrainer(ArgillaTrainerSkeleton):
                     # the user the one selected is not allowed.
                     self.trainer_kwargs["evaluator"] = None
                     self._logger.warning(
-                        f"Currently only developed evaluators that implement `cls.from_input_examples` can be set."
+                        "Currently only developed evaluators that implement `cls.from_input_examples` can be set."
                     )
         else:
             if label:
@@ -241,7 +241,7 @@ class ArgillaSentenceTransformersTrainer(ArgillaTrainerSkeleton):
         if "train_dataloader" in self.trainer_kwargs:
             self.trainer_kwargs.pop("train_dataloader")
 
-        self._trainer = self._trainer_cls(self._model, **self.model_kwargs)
+        self._framework_trainer = self._trainer_cls(self._model, **self.model_kwargs)
 
     def update_config(self, **kwargs) -> None:
         """
@@ -282,14 +282,14 @@ class ArgillaSentenceTransformersTrainer(ArgillaTrainerSkeleton):
         else:
             dataloader = DataLoader(dataset=self._train_dataset, batch_size=self.data_kwargs["batch_size"])
 
-        train_loss = self._loss_cls(self._trainer)
+        train_loss = self._loss_cls(self._framework_trainer)
 
         if self._cross_encoder:
             train_objectives = dataloader
         else:
             train_objectives = [(dataloader, train_loss)]
 
-        self._trainer.fit(train_objectives, **self.trainer_kwargs)
+        self._framework_trainer.fit(train_objectives, **self.trainer_kwargs)
 
         if output_dir is not None:
             self.save(output_dir)
@@ -317,7 +317,7 @@ class ArgillaSentenceTransformersTrainer(ArgillaTrainerSkeleton):
             sentences = text
 
         if self._cross_encoder:
-            prediction = list(self._trainer.predict(sentences, **kwargs))
+            prediction = list(self._framework_trainer.predict(sentences, **kwargs))
 
         else:
             from sentence_transformers.util import cos_sim
@@ -326,8 +326,8 @@ class ArgillaSentenceTransformersTrainer(ArgillaTrainerSkeleton):
             # the input sentences, but maybe is more intuitive to return only the similarities
             # between pairs as we do with the CrossEncoder predictions.
             sources, targets = zip(*sentences)
-            embeds_source = self._trainer.encode(sources, **kwargs)
-            embeds_target = self._trainer.encode(targets, **kwargs)
+            embeds_source = self._framework_trainer.encode(sources, **kwargs)
+            embeds_target = self._framework_trainer.encode(targets, **kwargs)
             prediction = list(cos_sim(embeds_source, embeds_target).numpy()[0])
 
         if as_argilla_records:
@@ -340,12 +340,12 @@ class ArgillaSentenceTransformersTrainer(ArgillaTrainerSkeleton):
         Saves the model to the specified path.
         """
         if self._cross_encoder:
-            self._trainer.save(output_dir)
+            self._framework_trainer.save(output_dir)
         else:
             # For the moment just save the in the simplest form, creating the model card or the
             # dataset for example should be done taking the extra information from the argilla
             # dataset instead of the defaults
-            self._trainer.save(output_dir, model_name=None, create_model_card=False, train_datasets=None)
+            self._framework_trainer.save(output_dir, model_name=None, create_model_card=False, train_datasets=None)
 
     def get_model_card_data(self, **card_data_kwargs) -> "SentenceTransformerCardData":
         """

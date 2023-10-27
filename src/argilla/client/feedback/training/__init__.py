@@ -12,8 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-from argilla.client.feedback.training.base import ArgillaTrainer
-from argilla.client.feedback.training.schemas import (
+from argilla.client.feedback.training.frameworks.base import ArgillaTrainer
+from argilla.client.feedback.training.schemas.base import (
     TrainingTask,
     TrainingTaskForChatCompletion,
     TrainingTaskForDPO,

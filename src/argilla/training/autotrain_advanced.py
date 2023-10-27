@@ -254,3 +254,6 @@ class ArgillaAutoTrainTrainer(ArgillaTrainerSkeleton, AutoTrainMixin):
           output_dir (str): the path to save the model to
         """
         self._logger.warning("Models are saved on the HuggingFace Hub, so this function is not supported.")
+
+    def get_model_kwargs(self):
+        return {}

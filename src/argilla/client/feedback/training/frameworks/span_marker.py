@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from datasets import DatasetDict
 
-from argilla.client.feedback.training.base import ArgillaTrainerSkeleton
+from argilla.client.feedback.training.frameworks.base import ArgillaTrainerSkeleton
 from argilla.client.models import TokenClassificationRecord
 from argilla.training.span_marker import ArgillaSpanMarkerTrainer as ArgillaSpanMarkerTrainerV1
 

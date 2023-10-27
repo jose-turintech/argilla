@@ -31,7 +31,7 @@ from argilla.client.feedback.schemas.questions import (
 )
 from argilla.client.feedback.schemas.records import FeedbackRecord
 from argilla.client.feedback.schemas.types import AllowedQuestionTypes
-from argilla.client.feedback.training.schemas import (
+from argilla.client.feedback.training.schemas.base import (
     TrainingTaskForChatCompletion,
     TrainingTaskForDPO,
     TrainingTaskForPPO,
@@ -415,7 +415,7 @@ class FeedbackDataset(ArgillaMixin, HuggingFaceDatasetMixin, FeedbackDatasetBase
             ),
         ):
             raise ValueError(f"Training data {type(task)} is not supported yet")
-
+        return task.prepare_for_training(framework=framework, dataset=self, train_size=train_size, seed=seed, lang=lang)
         data = task._format_data(local_dataset)
         if framework in [
             Framework.TRANSFORMERS,
